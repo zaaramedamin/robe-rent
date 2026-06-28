@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); const m=require\\('mongoose'\\); m.connect\\(process.env.MONGODB_URI,{serverSelectionTimeoutMS:4000}\\).then\\(\\(\\)=>{console.log\\('MONGO_OK'\\);process.exit\\(0\\)}\\).catch\\(e=>{console.log\\('MONGO_FAIL:'+e.message.slice\\(0,80\\)\\);process.exit\\(1\\)}\\)\")",
+      "Bash(node -e ' *)",
+      "PowerShell(try { $d = Invoke-RestMethod -Uri \"http://localhost:5000/api/dresses\" -TimeoutSec 5; \"dresses in DB: $\\($d.Count\\)\"; $d | Select-Object name | Format-Table -AutoSize } catch { \"server on 5000 not reachable: $\\($_.Exception.Message\\)\" })"
+    ]
+  }
+}

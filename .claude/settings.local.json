@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); const m=require\\('mongoose'\\); m.connect\\(process.env.MONGODB_URI,{serverSelectionTimeoutMS:8000}\\).then\\(\\(\\)=>{console.log\\('MONGO_OK'\\);process.exit\\(0\\)}\\).catch\\(e=>{console.log\\('MONGO_FAIL: '+e.message.slice\\(0,120\\)\\);process.exit\\(1\\)}\\)\")",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); const m=require\\('mongoose'\\); m.connect\\(process.env.MONGODB_URI,{serverSelectionTimeoutMS:10000}\\).then\\(\\(\\)=>{console.log\\('MONGO_OK'\\);process.exit\\(0\\)}\\).catch\\(e=>{console.log\\('MONGO_FAIL: '+e.message.slice\\(0,160\\)\\);process.exit\\(1\\)}\\)\")"
+    ]
+  }
+}

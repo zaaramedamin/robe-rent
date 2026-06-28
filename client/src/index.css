@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ----- Base typography & background ----- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-ivory text-charcoal font-body antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading;
+  }
+}
+
+/* ----- Reusable component classes ----- */
+@layer components {
+  .btn {
+    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden
+      rounded-full px-6 py-3 font-medium transition-all duration-300
+      focus:outline-none focus:ring-2 focus:ring-rosegold-300
+      disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-rosegold-500 text-white hover:bg-rosegold-600
+      hover:shadow-lift hover:-translate-y-0.5 active:scale-[0.98];
+  }
+  .btn-outline {
+    @apply btn border border-rosegold-400 text-rosegold-600
+      hover:bg-rosegold-50 hover:-translate-y-0.5;
+  }
+  .input {
+    @apply w-full rounded-lg border border-rosegold-200 bg-white px-4 py-2.5
+      text-charcoal placeholder-charcoal-light/50 transition
+      focus:border-rosegold-400 focus:outline-none focus:ring-2
+      focus:ring-rosegold-200;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-charcoal-light;
+  }
+  .card {
+    @apply rounded-2xl bg-white shadow-soft transition-all duration-300;
+  }
+  /* Cards that should lift on hover (e.g. gallery, feature cards). */
+  .card-hover {
+    @apply hover:-translate-y-1.5 hover:shadow-lift;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold;
+  }
+}
+
+/* ----- Animation helpers ----- */
+@layer utilities {
+  /* Respect users who prefer reduced motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  /* Small staggered delays for list/grid entrance animations. */
+  .delay-75 { animation-delay: 75ms; }
+  .delay-150 { animation-delay: 150ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-500 { animation-delay: 500ms; }
+}
+
+/* -----------------------------------------------------------------
+   react-calendar overrides to match the bridal palette.
+   Reserved days appear red, available days green, and the selected
+   day is highlighted in rose gold (it must win over the availability
+   colours below, so its rules use !important and come last).
+------------------------------------------------------------------ */
+.react-calendar {
+  width: 100%;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  background: transparent;
+  line-height: 1.4;
+}
+
+/* Navigation (month + arrows) with more breathing room. */
+.react-calendar__navigation {
+  display: flex;
+  margin-bottom: 1rem;
+}
+.react-calendar__navigation button {
+  color: #2b2b2e;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: 0.6rem;
+  min-width: 40px;
+}
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
+  background-color: #f6e3da;
+}
+.react-calendar__navigation button:disabled {
+  background-color: transparent;
+  color: #cbb8ad;
+}
+
+/* Weekday labels. */
+.react-calendar__month-view__weekdays {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #a9623f;
+  margin-bottom: 0.35rem;
+}
+.react-calendar__month-view__weekdays__weekday {
+  padding: 0.4rem 0;
+  text-align: center;
+}
+.react-calendar__month-view__weekdays abbr {
+  text-decoration: none;
+}
+
+/* Day tiles. A transparent border + padding-box background creates
+   even spacing between the coloured day cells. */
+.react-calendar__tile {
+  box-sizing: border-box;
+  height: 46px;
+  padding: 0;
+  border: 3px solid transparent;
+  border-radius: 0.7rem;
+  background-clip: padding-box;
+  font-size: 0.9rem;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background-color: #f6e3da;
+  transform: translateY(-1px);
+}
+.react-calendar__tile--now {
+  outline: 1px solid #e2a98e;
+}
+.react-calendar__tile:disabled {
+  background-color: #f4f1ec;
+  color: #c7c0b8;
+}
+
+/* Availability states (added via tileClassName). */
+.cal-reserved {
+  background-color: #fde2e2 !important;
+  color: #b91c1c !important;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+.cal-available {
+  background-color: #e7f6ec !important;
+  color: #15803d !important;
+}
+.cal-available:enabled:hover {
+  background-color: #d4eede !important;
+  transform: translateY(-1px);
+}
+
+/* Selected day / range — highest priority so it is always clearly
+   visible, even on top of a green "available" tile. */
+.cal-selected,
+.cal-selected:enabled:hover,
+.react-calendar__tile--active,
+.react-calendar__tile--active:enabled:hover,
+.react-calendar__tile--range,
+.react-calendar__tile--range:enabled:hover {
+  background-color: #c47a5a !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+/* Soft middle of a selected range; solid rounded ends. */
+.react-calendar__tile--range {
+  background-color: #e2a98e !important;
+  border-radius: 0 !important;
+}
+.react-calendar__tile--rangeStart {
+  border-top-left-radius: 0.7rem !important;
+  border-bottom-left-radius: 0.7rem !important;
+  background-color: #c47a5a !important;
+}
+.react-calendar__tile--rangeEnd {
+  border-top-right-radius: 0.7rem !important;
+  border-bottom-right-radius: 0.7rem !important;
+  background-color: #c47a5a !important;
+}
