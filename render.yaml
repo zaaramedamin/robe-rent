@@ -1,0 +1,37 @@
+# Render blueprint for the Robe-Rent API.
+# Render → New → Blueprint → point at this repo. Fill the `sync: false`
+# variables in the dashboard after the service is created.
+services:
+  - type: web
+    name: robe-rent-api
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false # MongoDB Atlas connection string
+      - key: JWT_SECRET
+        generateValue: true # Render generates a strong secret
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: CLIENT_ORIGIN
+        sync: false # your Vercel URL, e.g. https://robe-rent.vercel.app
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: BOOKING_BUFFER_DAYS
+        value: "1"
+      - key: MIN_RENTAL_DAYS
+        value: "1"
+      - key: MAX_RENTAL_DAYS
+        value: "30"
+      - key: DEFAULT_PHONE_COUNTRY
+        value: TN
+      - key: LOG_LEVEL
+        value: info

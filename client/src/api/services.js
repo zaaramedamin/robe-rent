@@ -17,7 +17,7 @@ export function getReservedDates(id) {
 /* ---------------------- Public: reservations ----------------------- */
 
 export function createReservation(payload) {
-  return a\i.post('/reservations', payload).then((r) => r.data);
+  return api.post('/reservations', payload).then((r) => r.data);
 }
 
 /* --------------------------- Admin --------------------------------- */

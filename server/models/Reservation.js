@@ -1,5 +1,15 @@
 const mongoose = require('mongoose');
 
+// A single status transition, recorded for audit purposes.
+const statusEventSchema = new mongoose.Schema(
+  {
+    status: { type: String, required: true },
+    at: { type: Date, default: Date.now },
+    by: { type: String, default: '' }, // admin username, or "" for customer/system
+  },
+  { _id: false }
+);
+
 /**
  * Reservation schema
  * A pre-reservation made by a customer for a specific dress on a
@@ -37,6 +47,8 @@ const reservationSchema = new mongoose.Schema(
       enum: ['pending', 'confirmed', 'out', 'returned', 'late', 'cancelled'],
       default: 'pending',
     },
+    // Append-only audit trail of status changes (most recent last).
+    statusHistory: { type: [statusEventSchema], default: [] },
   },
   { timestamps: true }
 );

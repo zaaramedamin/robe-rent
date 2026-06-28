@@ -78,6 +78,10 @@ router.get('/:id/reserved-dates', async (req, res, next) => {
       for (const d of eachDayISO(from, to)) days.add(d);
     }
 
+    // Include any boutique block-out dates configured on the dress itself.
+    const dress = await Dress.findById(req.params.id).select('blockoutDates');
+    for (const d of dress?.blockoutDates || []) days.add(d);
+
     res.json([...days].sort());
   } catch (err) {
     next(err);

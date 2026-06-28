@@ -73,6 +73,19 @@ function parseSizes(value) {
     .filter(Boolean);
 }
 
+/** Parse the `blockoutDates` field (JSON array string or comma-separated list). */
+function parseBlockoutDates(value) {
+  if (value === undefined || value === null || value === '') return [];
+  let arr;
+  try {
+    arr = JSON.parse(value);
+  } catch {
+    arr = String(value).split(',');
+  }
+  if (!Array.isArray(arr)) return [];
+  return arr.map((s) => String(s).trim()).filter(Boolean);
+}
+
 /**
  * POST /api/admin/dresses
  * Create a dress. Accepts multipart/form-data:
@@ -108,6 +121,7 @@ router.post('/', upload.array('images', 6), async (req, res, next) => {
       deposit: req.body.deposit ? Number(req.body.deposit) : 0,
       sizes: parseSizes(req.body.sizes),
       available: parseAvailable(req.body.available, true),
+      blockoutDates: parseBlockoutDates(req.body.blockoutDates),
       images: [...externalUrls, ...uploaded],
     });
 
@@ -165,6 +179,9 @@ router.put('/:id', upload.array('images', 6), async (req, res, next) => {
     }
     if (req.body.available !== undefined) {
       dress.available = parseAvailable(req.body.available);
+    }
+    if (req.body.blockoutDates !== undefined) {
+      dress.blockoutDates = parseBlockoutDates(req.body.blockoutDates);
     }
 
     await dress.save();

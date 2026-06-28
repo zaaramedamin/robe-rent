@@ -1,6 +1,8 @@
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
+import { useT } from '../i18n/LanguageContext';
+import LanguageToggle from './LanguageToggle';
 
 // Top navigation bar. Shows public links plus an admin entry that
 // becomes "Logout" when an admin session is active.
@@ -9,11 +11,12 @@ export default function Navbar() {
   const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
   const logout = useAuthStore((s) => s.logout);
+  const { t } = useT();
 
   const links = [
-    { to: '/', label: 'Home' },
-    { to: '/gallery', label: 'Gallery' },
-    { to: '/calendar', label: 'Availability' },
+    { to: '/', label: t('nav.home') },
+    { to: '/gallery', label: t('nav.gallery') },
+    { to: '/calendar', label: t('nav.availability') },
   ];
 
   const linkClass = ({ isActive }) =>
@@ -45,29 +48,33 @@ export default function Navbar() {
           {token ? (
             <>
               <NavLink to="/admin" className={linkClass}>
-                Dashboard
+                {t('nav.dashboard')}
               </NavLink>
               <button onClick={handleLogout} className="btn-outline px-4 py-2 text-sm">
-                Logout
+                {t('nav.logout')}
               </button>
             </>
           ) : (
             <Link to="/admin/login" className="btn-primary px-5 py-2 text-sm">
-              Admin
+              {t('nav.admin')}
             </Link>
           )}
+          <LanguageToggle />
         </div>
 
         {/* Mobile toggle */}
-        <button
-          className="md:hidden text-charcoal"
-          onClick={() => setOpen((o) => !o)}
-          aria-label="Toggle menu"
-        >
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            {open ? <path d="M6 6l12 12M6 18L18 6" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-          </svg>
-        </button>
+        <div className="flex items-center gap-3 md:hidden">
+          <LanguageToggle />
+          <button
+            className="text-charcoal"
+            onClick={() => setOpen((o) => !o)}
+            aria-label={t('nav.toggleMenu')}
+          >
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              {open ? <path d="M6 6l12 12M6 18L18 6" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+            </svg>
+          </button>
+        </div>
       </nav>
 
       {/* Mobile menu */}
@@ -88,15 +95,15 @@ export default function Navbar() {
             {token ? (
               <>
                 <NavLink to="/admin" className={linkClass} onClick={() => setOpen(false)}>
-                  Dashboard
+                  {t('nav.dashboard')}
                 </NavLink>
                 <button onClick={handleLogout} className="btn-outline">
-                  Logout
+                  {t('nav.logout')}
                 </button>
               </>
             ) : (
               <Link to="/admin/login" className="btn-primary" onClick={() => setOpen(false)}>
-                Admin Login
+                {t('nav.adminLogin')}
               </Link>
             )}
           </div>

@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import { getDresses } from '../api/services';
 import DressCard from '../components/DressCard';
 import Spinner from '../components/Spinner';
+import { useT } from '../i18n/LanguageContext';
 
 // Landing page: hero + a few featured dresses + how-it-works.
 export default function Home() {
+  const { t } = useT();
   const [featured, setFeatured] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -15,6 +17,12 @@ export default function Home() {
       .catch(() => setFeatured([]))
       .finally(() => setLoading(false));
   }, []);
+
+  const steps = [
+    { n: '1', title: t('home.step1Title'), desc: t('home.step1Desc') },
+    { n: '2', title: t('home.step2Title'), desc: t('home.step2Desc') },
+    { n: '3', title: t('home.step3Title'), desc: t('home.step3Desc') },
+  ];
 
   return (
     <div>
@@ -27,18 +35,17 @@ export default function Home() {
         <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-20 md:grid-cols-2 md:py-28">
           <div>
             <span className="badge bg-rosegold-100 text-rosegold-700 animate-fade-up">
-              Wedding dress rental · Tunisia
+              {t('home.badge')}
             </span>
             <h1 className="mt-5 font-heading text-4xl leading-tight text-charcoal animate-fade-up delay-75 sm:text-5xl md:text-6xl">
-              Find your dream dress, <span className="text-rosegold-500">reserve in seconds.</span>
+              {t('home.heroTitle')} <span className="text-rosegold-500">{t('home.heroAccent')}</span>
             </h1>
             <p className="mt-5 max-w-md text-lg text-charcoal-light animate-fade-up delay-150">
-              Browse our curated collection of bridal and oriental gowns, check
-              real-time availability, and pre-reserve your favourite — all online.
+              {t('home.heroSubtitle')}
             </p>
             <div className="mt-8 flex flex-wrap gap-4 animate-fade-up delay-300">
-              <Link to="/gallery" className="btn-primary">Browse the gallery</Link>
-              <Link to="/calendar" className="btn-outline">Check availability</Link>
+              <Link to="/gallery" className="btn-primary">{t('home.browse')}</Link>
+              <Link to="/calendar" className="btn-outline">{t('home.checkAvailability')}</Link>
             </div>
           </div>
           <div className="relative animate-scale-in">
@@ -49,8 +56,8 @@ export default function Home() {
             />
             {/* Floating price/availability accent card */}
             <div className="absolute -bottom-5 -left-5 hidden rounded-2xl bg-white/90 px-5 py-3 shadow-soft backdrop-blur sm:block animate-fade-up delay-500">
-              <p className="text-xs text-charcoal-light">Starting from</p>
-              <p className="font-heading text-xl text-rosegold-600">240 TND / day</p>
+              <p className="text-xs text-charcoal-light">{t('home.startingFrom')}</p>
+              <p className="font-heading text-xl text-rosegold-600">{t('home.perDay', { price: 240 })}</p>
             </div>
           </div>
         </div>
@@ -60,11 +67,11 @@ export default function Home() {
       <section className="mx-auto max-w-6xl px-4 py-16">
         <div className="mb-8 flex items-end justify-between">
           <div>
-            <h2 className="font-heading text-3xl text-charcoal">Featured gowns</h2>
-            <p className="mt-1 text-charcoal-light">A glimpse of our collection.</p>
+            <h2 className="font-heading text-3xl text-charcoal">{t('home.featured')}</h2>
+            <p className="mt-1 text-charcoal-light">{t('home.featuredSub')}</p>
           </div>
           <Link to="/gallery" className="hidden text-rosegold-600 hover:underline sm:block">
-            View all →
+            {t('home.viewAll')}
           </Link>
         </div>
 
@@ -83,14 +90,10 @@ export default function Home() {
       <section className="bg-ivory-200">
         <div className="mx-auto max-w-6xl px-4 py-16">
           <h2 className="text-center font-heading text-3xl text-charcoal">
-            How it works
+            {t('home.howItWorks')}
           </h2>
           <div className="mt-10 grid gap-8 md:grid-cols-3">
-            {[
-              { n: '1', t: 'Browse', d: 'Explore our gallery and filter by style, price, or date.' },
-              { n: '2', t: 'Check availability', d: 'See exactly which days each dress is free on its calendar.' },
-              { n: '3', t: 'Pre-reserve', d: 'Fill in your details and we confirm your booking shortly.' },
-            ].map((s, i) => (
+            {steps.map((s, i) => (
               <div
                 key={s.n}
                 style={{ animationDelay: `${i * 120}ms` }}
@@ -99,8 +102,8 @@ export default function Home() {
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rosegold-500 font-heading text-xl text-white">
                   {s.n}
                 </div>
-                <h3 className="mt-4 font-heading text-xl text-charcoal">{s.t}</h3>
-                <p className="mt-2 text-sm text-charcoal-light">{s.d}</p>
+                <h3 className="mt-4 font-heading text-xl text-charcoal">{s.title}</h3>
+                <p className="mt-2 text-sm text-charcoal-light">{s.desc}</p>
               </div>
             ))}
           </div>

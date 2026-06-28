@@ -1,13 +1,18 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const Dress = require('../models/Dress');
 const Reservation = require('../models/Reservation');
-const { startOfDayUTC, addDaysUTC, daysInclusive } = require('../utils/date');
+const validate = require('../middleware/validate');
+const { reservationCreateSchema } = require('../validators');
+const { startOfDayUTC, addDaysUTC, daysInclusive, eachDayISO } = require('../utils/date');
 
 const router = express.Router();
 
 // Cleaning/maintenance buffer (days) enforced between two rentals.
 const BUFFER_DAYS = Number(process.env.BOOKING_BUFFER_DAYS || 1);
+
+// Allowed rental length bounds (inclusive day count).
+const MIN_RENTAL_DAYS = Number(process.env.MIN_RENTAL_DAYS || 1);
+const MAX_RENTAL_DAYS = Number(process.env.MAX_RENTAL_DAYS || 30);
 
 // Statuses that actively hold a dress's dates (block new bookings).
 // "cancelled" and "returned" release the dates.
@@ -40,32 +45,27 @@ function findConflict(dressId, reqStart, reqEnd) {
  * must not overlap any active reservation's range plus the cleaning
  * buffer on either side.
  */
-router.post('/', async (req, res, next) => {
+router.post('/', validate({ body: reservationCreateSchema }), async (req, res, next) => {
   try {
     const { dressId, customerName, phone, email, startDate, endDate, notes, size } =
       req.body;
 
-    // --- Basic field validation -------------------------------------
-    if (!dressId || !customerName || !phone || !email || !startDate) {
-      return res.status(400).json({
-        message:
-          'Missing required fields: dressId, customerName, phone, email and startDate are required.',
-      });
-    }
-    if (!mongoose.isValidObjectId(dressId)) {
-      return res.status(400).json({ message: 'Invalid dress id.' });
-    }
-
+    // Fields and formats are validated by `reservationCreateSchema`; here
+    // we only enforce date-range business rules and availability.
     const start = startOfDayUTC(startDate);
     // endDate is optional; a missing end means a single-day rental.
     const end = endDate ? startOfDayUTC(endDate) : start;
-    if (!start || !end) {
-      return res.status(400).json({ message: 'Invalid reservation date(s).' });
-    }
     if (end < start) {
       return res
         .status(400)
         .json({ message: 'The return date must be on or after the start date.' });
+    }
+
+    const rentalDays = daysInclusive(start, end);
+    if (rentalDays < MIN_RENTAL_DAYS || rentalDays > MAX_RENTAL_DAYS) {
+      return res.status(400).json({
+        message: `Rental length must be between ${MIN_RENTAL_DAYS} and ${MAX_RENTAL_DAYS} day(s).`,
+      });
     }
 
     // --- The dress must exist and be globally rentable --------------
@@ -75,6 +75,17 @@ router.post('/', async (req, res, next) => {
       return res
         .status(409)
         .json({ message: 'This dress is currently not available for rental.' });
+    }
+
+    // --- Boutique block-out dates for this dress --------------------
+    if (dress.blockoutDates?.length) {
+      const requested = new Set(eachDayISO(start, end));
+      if (dress.blockoutDates.some((d) => requested.has(d))) {
+        return res.status(409).json({
+          message:
+            'The selected dates include a date the boutique has blocked for this dress. Please choose another period.',
+        });
+      }
     }
 
     // --- Real-time availability check (source of truth) -------------
@@ -87,7 +98,6 @@ router.post('/', async (req, res, next) => {
     }
 
     // --- Pricing snapshots ------------------------------------------
-    const rentalDays = daysInclusive(start, end);
     const pricePerDay = dress.pricePerDay;
     const totalPrice = pricePerDay * rentalDays;
 
@@ -106,6 +116,7 @@ router.post('/', async (req, res, next) => {
       deposit: dress.deposit || 0,
       notes: notes || '',
       status: 'pending',
+      statusHistory: [{ status: 'pending', by: '' }],
     });
 
     res.status(201).json({

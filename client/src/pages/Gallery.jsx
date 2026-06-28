@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getDresses, getReservedDates } from '../api/services';
 import DressCard from '../components/DressCard';
-import Spinner from '../components/Spinner';
+import SkeletonCard from '../components/SkeletonCard';
 import ErrorMessage from '../components/ErrorMessage';
 import { toISODate } from '../utils/date';
+import { useT } from '../i18n/LanguageContext';
 
 const categories = ['all', 'classic', 'modern', 'oriental'];
 
 // Public gallery with search + category + price + date-availability filters.
 export default function Gallery() {
+  const { t } = useT();
   const [dresses, setDresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -28,7 +30,7 @@ export default function Gallery() {
     setError('');
     getDresses()
       .then(setDresses)
-      .catch(() => setError('Could not load dresses. Is the server running?'))
+      .catch(() => setError(t('gallery.loadError')))
       .finally(() => setLoading(false));
   };
 
@@ -72,49 +74,47 @@ export default function Gallery() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
-      <h1 className="font-heading text-4xl text-charcoal">The Collection</h1>
-      <p className="mt-2 text-charcoal-light">
-        Filter by style, budget, or a specific date.
-      </p>
+      <h1 className="font-heading text-4xl text-charcoal">{t('gallery.title')}</h1>
+      <p className="mt-2 text-charcoal-light">{t('gallery.subtitle')}</p>
 
       {/* Filters */}
       <div className="card mt-6 grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <label className="label">Search</label>
+          <label className="label">{t('gallery.search')}</label>
           <input
             className="input"
-            placeholder="Dress name…"
+            placeholder={t('gallery.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <div>
-          <label className="label">Category</label>
+          <label className="label">{t('gallery.category')}</label>
           <select
             className="input"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           >
             {categories.map((c) => (
-              <option key={c} value={c} className="capitalize">
-                {c[0].toUpperCase() + c.slice(1)}
+              <option key={c} value={c}>
+                {t(`gallery.cat.${c}`)}
               </option>
             ))}
           </select>
         </div>
         <div>
-          <label className="label">Max price (TND/day)</label>
+          <label className="label">{t('gallery.maxPrice')}</label>
           <input
             type="number"
             min="0"
             className="input"
-            placeholder="Any"
+            placeholder={t('gallery.anyPrice')}
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
           />
         </div>
         <div>
-          <label className="label">Available on</label>
+          <label className="label">{t('gallery.availableOn')}</label>
           <input
             type="date"
             className="input"
@@ -128,26 +128,28 @@ export default function Gallery() {
       {availableOn && (
         <p className="mt-3 text-sm text-charcoal-light">
           {checkingDate
-            ? 'Checking availability…'
-            : `Showing dresses free on ${availableOn}.`}{' '}
+            ? t('gallery.checking')
+            : t('gallery.showingFree', { date: availableOn })}{' '}
           <button
             className="text-rosegold-600 hover:underline"
             onClick={() => setAvailableOn('')}
           >
-            clear date
+            {t('gallery.clearDate')}
           </button>
         </p>
       )}
 
       {/* Results */}
       {loading ? (
-        <Spinner />
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} />
+          ))}
+        </div>
       ) : error ? (
         <ErrorMessage message={error} onRetry={load} />
       ) : filtered.length === 0 ? (
-        <p className="py-16 text-center text-charcoal-light">
-          No dresses match your filters.
-        </p>
+        <p className="py-16 text-center text-charcoal-light">{t('gallery.noMatch')}</p>
       ) : (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((d, i) => (

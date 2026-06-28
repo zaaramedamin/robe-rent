@@ -6,12 +6,14 @@ import ReservationForm from '../components/ReservationForm';
 import Spinner from '../components/Spinner';
 import ErrorMessage from '../components/ErrorMessage';
 import { FALLBACK_IMG, onImgError } from '../utils/image';
+import { useT } from '../i18n/LanguageContext';
 
 // Dress detail page: image gallery + per-dress availability calendar +
 // reservation form. The calendar and form share `reservedDates` so the
 // real-time availability guard is consistent.
 export default function DressDetail() {
   const { id } = useParams();
+  const { t } = useT();
   const [dress, setDress] = useState(null);
   const [reservedDates, setReservedDates] = useState([]);
   const [activeImage, setActiveImage] = useState(0);
@@ -28,7 +30,7 @@ export default function DressDetail() {
         setDress(d);
         setReservedDates(dates);
       })
-      .catch(() => setError('Could not load this dress.'))
+      .catch(() => setError(t('detail.loadError')))
       .finally(() => setLoading(false));
   };
 
@@ -38,7 +40,7 @@ export default function DressDetail() {
   const handleSelectRange = (picked, reason) => {
     if (reason === 'crosses') {
       setRange(null);
-      setRangeError('Your selected period includes an unavailable day. Pick a clear range.');
+      setRangeError(t('detail.crosses'));
       return;
     }
     setRangeError('');
@@ -59,7 +61,7 @@ export default function DressDetail() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <Link to="/gallery" className="text-sm text-rosegold-600 hover:underline">
-        ← Back to gallery
+        {t('detail.back')}
       </Link>
 
       <div className="mt-6 grid gap-10 lg:grid-cols-2">
@@ -93,19 +95,19 @@ export default function DressDetail() {
 
         {/* Info */}
         <div>
-          <span className="badge bg-rosegold-100 capitalize text-rosegold-700">
-            {dress.category}
+          <span className="badge bg-rosegold-100 text-rosegold-700">
+            {t(`gallery.cat.${dress.category}`)}
           </span>
           <h1 className="mt-3 font-heading text-4xl text-charcoal">{dress.name}</h1>
           <p className="mt-4 text-charcoal-light">{dress.description}</p>
           <div className="mt-6 flex flex-wrap items-end gap-x-6 gap-y-2">
             <div className="text-3xl font-semibold text-rosegold-600">
               {dress.pricePerDay} TND
-              <span className="text-base font-normal text-charcoal-light"> / day</span>
+              <span className="text-base font-normal text-charcoal-light"> {t('dress.perDay')}</span>
             </div>
             {dress.deposit > 0 && (
               <div className="text-sm text-charcoal-light">
-                Refundable deposit:{' '}
+                {t('detail.refundableDeposit')}{' '}
                 <strong className="text-charcoal">{dress.deposit} TND</strong>
               </div>
             )}
@@ -114,7 +116,7 @@ export default function DressDetail() {
           {/* Available sizes */}
           {dress.sizes?.length > 0 && (
             <div className="mt-4">
-              <p className="label">Available sizes</p>
+              <p className="label">{t('detail.availableSizes')}</p>
               <div className="flex flex-wrap gap-2">
                 {dress.sizes.map((s) => (
                   <span key={s} className="badge border border-rosegold-200 bg-white text-charcoal">
@@ -127,17 +129,14 @@ export default function DressDetail() {
 
           {!dress.available && (
             <p className="mt-3 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">
-              This dress is currently not available for rental.
+              {t('detail.notAvailable')}
             </p>
           )}
 
           {/* Per-dress availability calendar (range selection) */}
           <div className="mt-8">
-            <h2 className="mb-1 font-heading text-2xl text-charcoal">Availability</h2>
-            <p className="mb-3 text-sm text-charcoal-light">
-              Click your <strong>start</strong> date, then your <strong>return</strong> date.
-              A {dress.deposit >= 0 ? 'cleaning' : ''} buffer between rentals is shown as reserved.
-            </p>
+            <h2 className="mb-1 font-heading text-2xl text-charcoal">{t('detail.availability')}</h2>
+            <p className="mb-3 text-sm text-charcoal-light">{t('detail.availabilityHelp')}</p>
             {rangeError && (
               <p className="mb-3 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{rangeError}</p>
             )}

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { useT } from '../i18n/LanguageContext';
 
-// Admin login. Uses the hardcoded prototype credentials (admin/admin123)
-// validated by the backend, which returns a JWT.
+// Admin login. Authenticates against the DB-backed admin accounts; the
+// backend returns a JWT on success.
 export default function AdminLogin() {
   const navigate = useNavigate();
   const login = useAuthStore((s) => s.login);
+  const { t } = useT();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,7 +22,7 @@ export default function AdminLogin() {
       await login(username, password);
       navigate('/admin');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Check your credentials.');
+      setError(err.response?.data?.message || t('login.failed'));
     } finally {
       setLoading(false);
     }
@@ -28,11 +30,7 @@ export default function AdminLogin() {
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center px-4 py-20">
-      <h1 className="font-heading text-3xl text-charcoal">Admin login</h1>
-      <p className="mt-2 text-center text-sm text-charcoal-light">
-        Prototype credentials: <code className="rounded bg-ivory-200 px-1">admin</code> /{' '}
-        <code className="rounded bg-ivory-200 px-1">admin123</code>
-      </p>
+      <h1 className="font-heading text-3xl text-charcoal">{t('login.title')}</h1>
 
       <form onSubmit={handleSubmit} className="card mt-8 w-full p-6">
         {error && (
@@ -42,7 +40,7 @@ export default function AdminLogin() {
         )}
         <div className="space-y-4">
           <div>
-            <label className="label" htmlFor="username">Username</label>
+            <label className="label" htmlFor="username">{t('login.username')}</label>
             <input
               id="username"
               className="input"
@@ -53,7 +51,7 @@ export default function AdminLogin() {
             />
           </div>
           <div>
-            <label className="label" htmlFor="password">Password</label>
+            <label className="label" htmlFor="password">{t('login.password')}</label>
             <input
               id="password"
               type="password"
@@ -65,7 +63,7 @@ export default function AdminLogin() {
           </div>
         </div>
         <button type="submit" className="btn-primary mt-6 w-full" disabled={loading}>
-          {loading ? 'Signing in…' : 'Sign in'}
+          {loading ? t('login.signingIn') : t('login.signIn')}
         </button>
       </form>
     </div>

@@ -20,7 +20,17 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
   const [updatingId, setUpdatingId] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState({ key: 'startDate', dir: 'asc' });
   const [selectedDay, setSelectedDay] = useState(new Date());
+
+  // Toggle sort direction on the same column, or switch to a new column (asc).
+  const toggleSort = (key) =>
+    setSort((s) =>
+      s.key === key
+        ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' }
+        : { key, dir: 'asc' }
+    );
 
   const load = () => {
     setLoading(true);
@@ -57,7 +67,7 @@ export default function AdminDashboard() {
   const exportCsv = () => {
     const headers = ['Customer', 'Phone', 'Email', 'Dress', 'Size', 'Start', 'End', 'Days', 'Total (TND)', 'Deposit (TND)', 'Status', 'Notes'];
     const esc = (v) => `"${String(v ?? '').replace(/"/g, '""').replace(/\r?\n/g, ' ')}"`;
-    const rows = reservations.map((r) => [
+    const rows = displayed.map((r) => [
       r.customerName,
       r.phone,
       r.email,
@@ -95,13 +105,43 @@ export default function AdminDashboard() {
     return map;
   }, [reservations]);
 
-  const filtered = useMemo(
-    () =>
-      statusFilter === 'all'
-        ? reservations
-        : reservations.filter((r) => r.status === statusFilter),
-    [reservations, statusFilter]
-  );
+  // Status filter + free-text search + column sort, applied client-side.
+  const displayed = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const list = reservations.filter((r) => {
+      if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+      if (!q) return true;
+      const hay = [r.customerName, r.phone, r.email, r.dressId?.name]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return hay.includes(q);
+    });
+
+    const dir = sort.dir === 'asc' ? 1 : -1;
+    const val = (r) => {
+      switch (sort.key) {
+        case 'customerName':
+          return (r.customerName || '').toLowerCase();
+        case 'dressName':
+          return (r.dressId?.name || '').toLowerCase();
+        case 'totalPrice':
+          return r.totalPrice || 0;
+        case 'status':
+          return r.status || '';
+        case 'startDate':
+        default:
+          return new Date(r.startDate).getTime();
+      }
+    };
+    return [...list].sort((a, b) => {
+      const va = val(a);
+      const vb = val(b);
+      if (va < vb) return -dir;
+      if (va > vb) return dir;
+      return 0;
+    });
+  }, [reservations, statusFilter, search, sort]);
 
   const dayBookings = byDay.get(toISODate(selectedDay)) || [];
 
@@ -146,31 +186,63 @@ export default function AdminDashboard() {
       {/* Reservations table */}
       <div className="mt-10 flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-heading text-2xl text-charcoal">Reservations</h2>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={exportCsv}
-            disabled={reservations.length === 0}
-            className="btn-outline px-4 py-2 text-sm"
-          >
-            Export CSV
-          </button>
-          <select
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            type="search"
             className="rounded-lg border border-rosegold-200 bg-white px-3 py-2 text-sm focus:border-rosegold-400 focus:outline-none"
+            placeholder="Search name, phone, email, dress…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search reservations"
+          />
+          <select
+            className="rounded-lg border border-rosegold-200 bg-white px-3 py-2 text-sm capitalize focus:border-rosegold-400 focus:outline-none"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
+            aria-label="Filter by status"
           >
             <option value="all">All statuses</option>
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
+            <option value="out">Out</option>
+            <option value="returned">Returned</option>
+            <option value="late">Late</option>
             <option value="cancelled">Cancelled</option>
           </select>
+          <button
+            onClick={exportCsv}
+            disabled={displayed.length === 0}
+            className="btn-outline px-4 py-2 text-sm"
+          >
+            Export CSV
+          </button>
         </div>
       </div>
+      <p className="mt-2 text-sm text-charcoal-light">
+        Showing {displayed.length} of {reservations.length} reservation
+        {reservations.length === 1 ? '' : 's'}
+        {(search || statusFilter !== 'all') && (
+          <>
+            {' · '}
+            <button
+              className="text-rosegold-600 hover:underline"
+              onClick={() => {
+                setSearch('');
+                setStatusFilter('all');
+              }}
+            >
+              clear
+            </button>
+          </>
+        )}
+      </p>
       <div className="mt-4">
         <AdminTable
-          reservations={filtered}
+          reservations={displayed}
           onStatusChange={handleStatusChange}
           updatingId={updatingId}
+          sort={sort}
+          onSort={toggleSort}
         />
       </div>
 

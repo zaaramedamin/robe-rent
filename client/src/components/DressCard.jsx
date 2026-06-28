@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FALLBACK_IMG, onImgError } from '../utils/image';
+import { useT } from '../i18n/LanguageContext';
 
 const categoryColors = {
   classic: 'bg-rosegold-100 text-rosegold-700',
@@ -9,6 +10,7 @@ const categoryColors = {
 
 // Gallery card for a single dress.
 export default function DressCard({ dress, index = 0 }) {
+  const { t } = useT();
   const cover = dress.images?.[0] || FALLBACK_IMG;
 
   return (
@@ -28,15 +30,15 @@ export default function DressCard({ dress, index = 0 }) {
         {/* Subtle gradient for legibility on hover. */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-charcoal/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         <span
-          className={`badge absolute left-3 top-3 capitalize ${
+          className={`badge absolute left-3 top-3 ${
             categoryColors[dress.category] || 'bg-white text-charcoal'
           }`}
         >
-          {dress.category}
+          {t(`gallery.cat.${dress.category}`)}
         </span>
         {!dress.available && (
           <span className="badge absolute right-3 top-3 bg-red-100 text-red-700">
-            Unavailable
+            {t('dress.unavailable')}
           </span>
         )}
       </div>
@@ -48,10 +50,10 @@ export default function DressCard({ dress, index = 0 }) {
         <div className="mt-4 flex items-center justify-between">
           <span className="text-lg font-semibold text-rosegold-600">
             {dress.pricePerDay} TND
-            <span className="text-xs font-normal text-charcoal-light"> / day</span>
+            <span className="text-xs font-normal text-charcoal-light"> {t('dress.perDay')}</span>
           </span>
           <span className="text-sm font-medium text-rosegold-500 group-hover:underline">
-            View →
+            {t('dress.view')}
           </span>
         </div>
       </div>

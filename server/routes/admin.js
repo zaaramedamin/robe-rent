@@ -1,31 +1,49 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const Reservation = require('../models/Reservation');
 const Dress = require('../models/Dress');
+const Admin = require('../models/Admin');
 const requireAdmin = require('../middleware/auth');
+const validate = require('../middleware/validate');
+const {
+  adminLoginSchema,
+  statusUpdateSchema,
+  idParamSchema,
+} = require('../validators');
 const { eachDayISO } = require('../utils/date');
 
 const router = express.Router();
 
 /**
  * POST /api/admin/login
- * Validates the hardcoded prototype credentials and returns a JWT.
+ * Authenticates an admin against the database (bcrypt-hashed password)
+ * and returns a signed JWT carrying the admin id and role.
  */
-router.post('/login', (req, res) => {
-  const { username, password } = req.body || {};
+router.post('/login', validate({ body: adminLoginSchema }), async (req, res, next) => {
+  try {
+    const { username, password } = req.body;
+    const admin = await Admin.findOne({ username: username.toLowerCase() });
 
-  if (
-    username === process.env.ADMIN_USERNAME &&
-    password === process.env.ADMIN_PASSWORD
-  ) {
-    const token = jwt.sign({ role: 'admin', username }, process.env.JWT_SECRET, {
-      expiresIn: '8h',
+    // Run the (slow) hash comparison whether or not the user exists so we
+    // don't leak which usernames are valid via response timing, then
+    // return a single generic error.
+    const ok = admin ? await admin.comparePassword(password) : false;
+    if (!ok) {
+      return res.status(401).json({ message: 'Invalid username or password.' });
+    }
+
+    const token = jwt.sign(
+      { sub: admin._id.toString(), role: admin.role, username: admin.username },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '8h' }
+    );
+    return res.json({
+      token,
+      admin: { username: admin.username, role: admin.role },
     });
-    return res.json({ token });
+  } catch (err) {
+    next(err);
   }
-
-  return res.status(401).json({ message: 'Invalid username or password.' });
 });
 
 // Every route below requires a valid admin token.
@@ -50,23 +68,21 @@ router.get('/reservations', async (req, res, next) => {
  * PATCH /api/admin/reservations/:id/status
  * Updates a reservation's status across the rental lifecycle.
  */
-router.patch('/reservations/:id/status', async (req, res, next) => {
+router.patch(
+  '/reservations/:id/status',
+  validate({ params: idParamSchema, body: statusUpdateSchema }),
+  async (req, res, next) => {
   try {
-    const { status } = req.body || {};
-    const allowed = ['pending', 'confirmed', 'out', 'returned', 'late', 'cancelled'];
-
-    if (!allowed.includes(status)) {
-      return res
-        .status(400)
-        .json({ message: `Status must be one of: ${allowed.join(', ')}.` });
-    }
-    if (!mongoose.isValidObjectId(req.params.id)) {
-      return res.status(400).json({ message: 'Invalid reservation id.' });
-    }
+    const { status } = req.body;
 
     const reservation = await Reservation.findByIdAndUpdate(
       req.params.id,
-      { status },
+      {
+        status,
+        $push: {
+          statusHistory: { status, at: new Date(), by: req.admin?.username || '' },
+        },
+      },
       { new: true }
     ).populate('dressId', 'name category pricePerDay');
 

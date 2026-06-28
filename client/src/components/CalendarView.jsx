@@ -1,5 +1,6 @@
 import Calendar from 'react-calendar';
 import { toISODate, isPast, eachDay } from '../utils/date';
+import { useT } from '../i18n/LanguageContext';
 
 /**
  * Reusable availability calendar (built on react-calendar).
@@ -27,6 +28,7 @@ export default function CalendarView({
   selectRange = false,
   selectable = true,
 }) {
+  const { t } = useT();
   const reservedSet = new Set(reservedDates);
   const isReserved = (date) => reservedSet.has(toISODate(date));
 
@@ -85,15 +87,15 @@ export default function CalendarView({
       <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-charcoal-light">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded bg-[#e7f6ec] ring-1 ring-green-300" />
-          Available
+          {t('calview.available')}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded bg-[#fde2e2] ring-1 ring-red-300" />
-          Reserved
+          {t('calview.reserved')}
         </span>
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded bg-rosegold-500" />
-          {selectRange ? 'Selected range' : 'Selected'}
+          {selectRange ? t('calview.selectedRange') : t('calview.selected')}
         </span>
       </div>
     </div>

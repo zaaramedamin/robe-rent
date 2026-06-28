@@ -28,6 +28,10 @@ const dressSchema = new mongoose.Schema(
     // Global "is this dress rentable at all" flag, independent of
     // any per-date reservations.
     available: { type: Boolean, default: true },
+    // Specific calendar days the boutique blocks for this dress
+    // (maintenance, photoshoots, private holds), as YYYY-MM-DD strings.
+    // Treated as unavailable in addition to active reservations.
+    blockoutDates: { type: [String], default: [] },
   },
   { timestamps: true }
 );
