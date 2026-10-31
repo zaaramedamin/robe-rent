@@ -1,307 +1,306 @@
-# RobeRent 👰
+# RobeRent
 
-A full-stack app that helps wedding dress rental businesses in Tunisia manage
-online pre-reservations and lets store managers see which dates are available.
-It features a public dress gallery, real-time availability calendars, a customer
-pre-reservation flow with client- and server-side validation, and a protected
-admin dashboard.
+A full-stack web application for wedding dress rental businesses in Tunisia.
+Customers browse the collection, check availability, and pre-reserve a dress
+online. Store managers track reservations and dates from a protected admin
+dashboard.
 
-## Tech stack
+**Live demo:** <https://robe-rent-1.vercel.app>
 
-| Layer      | Tech                                                        |
-| ---------- | ----------------------------------------------------------- |
-| Frontend   | React + Vite, Tailwind CSS, React Router, Zustand, Axios    |
-| Backend    | Node.js + Express                                           |
-| Database   | MongoDB + Mongoose                                          |
-| Validation | Zod + libphonenumber-js (server), inline validators (client)|
-| Auth       | JWT + bcrypt-hashed admin accounts in MongoDB               |
-| Security   | helmet, express-rate-limit                                  |
-| Logging    | winston + morgan                                            |
-| Tests      | Jest + Supertest                                            |
-| Tooling    | ESLint (flat config) + Prettier, Docker                     |
+![RobeRent demo](docs/media/demo.gif)
+
+## Table of contents
+
+- [Features](#features)
+- [Screenshots](#screenshots)
+- [Tech stack](#tech-stack)
+- [Project structure](#project-structure)
+- [Getting started](#getting-started)
+- [Configuration](#configuration)
+- [Admin accounts](#admin-accounts)
+- [Scripts](#scripts)
+- [Testing and linting](#testing-and-linting)
+- [Deployment](#deployment)
+- [API reference](#api-reference)
+- [How availability works](#how-availability-works)
+- [Security](#security)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Features
 
-- Public gallery with search, category, price, and date-availability filters.
-- Per-dress availability calendar with a configurable cleaning buffer between
-  rentals and boutique block-out dates.
-- Customer pre-reservation flow with real-time field validation and a
-  review-and-confirm step.
-- Protected admin dashboard: reservations, status lifecycle with an audit
-  trail, calendar, statistics/history, client history, and dress management
-  (with image upload).
+**Customer side**
+
+- Public gallery with search and filters by category, price, and date.
+- Per-dress availability calendar with a cleaning buffer between rentals.
+- Pre-reservation form with real-time validation and a price summary.
+- Global availability calendar showing which dresses are free on a given day.
+- English and French interface.
+
+**Admin side**
+
+- Protected dashboard with JWT authentication and role support (admin, staff).
+- Reservation management with a status lifecycle and audit trail.
+- Calendar view, statistics, monthly history, and client history.
+- Dress management with image upload and boutique block-out dates.
+
+## Screenshots
+
+| Home                         | Gallery                            |
+| ---------------------------- | ---------------------------------- |
+| ![Home](docs/media/home.jpg) | ![Gallery](docs/media/gallery.jpg) |
+
+| Dress details                                 | Date selection                                   |
+| --------------------------------------------- | ------------------------------------------------ |
+| ![Dress details](docs/media/dress-detail.jpg) | ![Date selection](docs/media/date-selection.jpg) |
+
+| Reservation form                                     | Availability calendar                        |
+| ---------------------------------------------------- | -------------------------------------------- |
+| ![Reservation form](docs/media/reservation-form.jpg) | ![Availability](docs/media/availability.jpg) |
+
+## Tech stack
+
+| Layer      | Technology                                                  |
+| ---------- | ----------------------------------------------------------- |
+| Frontend   | React, Vite, Tailwind CSS, React Router, Zustand, Axios     |
+| Backend    | Node.js, Express                                            |
+| Database   | MongoDB, Mongoose                                           |
+| Validation | Zod, libphonenumber-js (server); inline validators (client) |
+| Auth       | JWT, bcrypt-hashed admin accounts                           |
+| Security   | helmet, express-rate-limit                                  |
+| Logging    | winston, morgan                                             |
+| Tests      | Jest, Supertest                                             |
+| Tooling    | ESLint, Prettier, Docker                                    |
 
 ## Project structure
 
 ```
-Robe-Rent/
-├── client/                 # React + Vite frontend
+robe-rent/
+├── client/                  React + Vite frontend
 │   └── src/
-│       ├── api/            # axios instance + service functions
-│       ├── components/     # Navbar, DressCard, ReservationForm, AdminTable, …
-│       ├── pages/          # Home, Gallery, DressDetail, Admin* …
-│       ├── store/          # Zustand auth store
-│       └── utils/          # date, image, validation, auth (JWT) helpers
-├── server/                 # Express API
-│   ├── models/             # Dress.js, Reservation.js, Admin.js, Image.js
-│   ├── routes/             # dresses, reservations, admin, adminDresses, images
-│   ├── middleware/         # auth.js (JWT), validate.js (Zod)
-│   ├── validators/         # Zod schemas
-│   ├── utils/              # date, logger, errors
-│   ├── tests/              # Jest + Supertest suites
-│   ├── seed.js             # sample reservations seeder
-│   ├── seed-admin.js       # admin account bootstrap
-│   ├── Dockerfile
-│   └── server.js           # app entry
-├── docker-compose.yml      # MongoDB + API for local dev
-├── eslint.config.js        # flat ESLint config (server + client)
-└── docs/API.md             # full API contract with examples
+│       ├── api/             Axios instance and service functions
+│       ├── components/      Reusable UI components
+│       ├── i18n/            Language context and translations
+│       ├── pages/           Public and admin pages
+│       ├── store/           Zustand auth store
+│       └── utils/           Date, image, validation, auth helpers
+├── server/                  Express API
+│   ├── models/              Dress, Reservation, Admin, Image
+│   ├── routes/              dresses, reservations, admin, images
+│   ├── middleware/          JWT auth and Zod validation
+│   ├── validators/          Zod schemas
+│   ├── utils/               Date, logger, error helpers
+│   ├── tests/               Jest and Supertest suites
+│   └── server.js            Application entry point
+├── docs/                    API documentation and README media
+├── docker-compose.yml       MongoDB and API for local development
+└── render.yaml              Render deployment blueprint
 ```
 
-## Prerequisites
+## Getting started
 
-- Node.js 18+
-- A running **MongoDB** instance (local or MongoDB Atlas), _or_ Docker.
+### Prerequisites
 
-## Quick start (local)
+- Node.js 18 or later
+- MongoDB (local instance or MongoDB Atlas), or Docker
 
-1. **Install dependencies** (from the repo root):
+### Run locally
+
+1. Install dependencies from the repository root:
 
    ```bash
    npm run install:all
    ```
 
-2. **Configure the backend.** Copy the example env and adjust as needed:
+2. Create the backend environment file:
 
    ```bash
    cp server/.env.example server/.env
    ```
 
-3. **Create the first admin account** (reads `ADMIN_USERNAME` / `ADMIN_PASSWORD`
+3. Create the first admin account (uses `ADMIN_USERNAME` and `ADMIN_PASSWORD`
    from `server/.env`):
 
    ```bash
    npm run seed:admin --prefix server
    ```
 
-   You can also create a specific admin: `node server/seed-admin.js <user> <pass> [admin|staff]`.
-
-4. _(Optional)_ **Seed sample reservations** (requires dresses to exist; add
-   them from the admin dashboard first):
+4. Start the API and the client in two terminals:
 
    ```bash
-   npm run seed
+   npm run server    # API on http://localhost:5000
+   npm run client    # Client on http://localhost:5173
    ```
 
-5. **Run both apps** in two terminals:
+The Vite dev server proxies `/api` to the backend, so no CORS setup is needed in
+development. Dresses are added from the admin dashboard. To generate sample
+reservations once dresses exist, run `npm run seed`.
 
-   ```bash
-   npm run server   # Express API on http://localhost:5000
-   npm run client   # Vite dev server on http://localhost:5173
-   ```
-
-   The Vite dev server proxies `/api` to the backend, so no CORS juggling is
-   needed in development.
-
-## Quick start (Docker)
+### Run with Docker
 
 ```bash
-docker compose up --build          # starts MongoDB + the API
+docker compose up --build
 docker compose exec server npm run seed:admin
 ```
 
-The API is then available on `http://localhost:5000` (health: `/api/health`).
-Run the client separately with `npm run client`.
+The API is available at `http://localhost:5000` (health check: `/api/health`).
+Start the client separately with `npm run client`.
 
-## Managing admin accounts
+## Configuration
 
-Admin accounts live in MongoDB with bcrypt-hashed passwords. Use the
-`seed-admin` script, run from the `server/` directory so it loads `server/.env`:
+Environment variables are read from `server/.env`. Only `server/.env.example` is
+tracked in Git.
+
+| Variable                | Default                 | Description                               |
+| ----------------------- | ----------------------- | ----------------------------------------- |
+| `PORT`                  | `5000`                  | API port                                  |
+| `NODE_ENV`              | -                       | `development`, `production`, or `test`    |
+| `MONGODB_URI`           | -                       | MongoDB connection string (required)      |
+| `JWT_SECRET`            | -                       | Secret used to sign admin JWTs (required) |
+| `JWT_EXPIRES_IN`        | `8h`                    | Admin token lifetime                      |
+| `ADMIN_USERNAME`        | -                       | Bootstrap admin username                  |
+| `ADMIN_PASSWORD`        | -                       | Bootstrap admin password                  |
+| `CLIENT_ORIGIN`         | `http://localhost:5173` | Allowed CORS origin                       |
+| `BOOKING_BUFFER_DAYS`   | `1`                     | Cleaning buffer between rentals           |
+| `MIN_RENTAL_DAYS`       | `1`                     | Minimum rental length                     |
+| `MAX_RENTAL_DAYS`       | `30`                    | Maximum rental length                     |
+| `DEFAULT_PHONE_COUNTRY` | `TN`                    | Default country for phone validation      |
+| `LOG_LEVEL`             | `debug` (development)   | winston log level                         |
+
+## Admin accounts
+
+Admin accounts are stored in MongoDB with bcrypt-hashed passwords. Run the
+script from the `server/` directory so that it loads `server/.env`:
 
 ```bash
 cd server
 
-# Create or update an admin (role defaults to "admin"):
+# Create or update an admin (role defaults to "admin")
 node seed-admin.js <username> <password> [admin|staff]
 
-# Examples
-node seed-admin.js sara s3cret          # new admin "sara"
-node seed-admin.js admin newpassword    # change the existing "admin" password
-node seed-admin.js karim pass123 staff  # new staff account
-
-# Or bootstrap from ADMIN_USERNAME / ADMIN_PASSWORD in .env:
+# Bootstrap from ADMIN_USERNAME / ADMIN_PASSWORD in .env
 npm run seed:admin
 ```
 
-If the username already exists, its password and role are updated; otherwise a
-new account is created. Usernames are case-insensitive. To rename an admin,
-create the new account and remove the old one (no delete script yet).
-
-## Environment variables
-
-| Variable                | Default                  | Description                                  |
-| ----------------------- | ------------------------ | -------------------------------------------- |
-| `PORT`                  | `5000`                   | API port                                     |
-| `NODE_ENV`              | —                        | `development` / `production` / `test`        |
-| `MONGODB_URI`           | —                        | MongoDB connection string (required)         |
-| `JWT_SECRET`            | —                        | Secret for signing admin JWTs (required)     |
-| `JWT_EXPIRES_IN`        | `8h`                     | Admin token lifetime                         |
-| `ADMIN_USERNAME`        | —                        | Bootstrap admin username (`seed:admin`)      |
-| `ADMIN_PASSWORD`        | —                        | Bootstrap admin password (`seed:admin`)      |
-| `CLIENT_ORIGIN`         | `http://localhost:5173`  | Allowed CORS origin                          |
-| `BOOKING_BUFFER_DAYS`   | `1`                      | Cleaning buffer enforced between rentals     |
-| `MIN_RENTAL_DAYS`       | `1`                      | Minimum rental length                        |
-| `MAX_RENTAL_DAYS`       | `30`                     | Maximum rental length                        |
-| `DEFAULT_PHONE_COUNTRY` | `TN`                     | Default country for phone validation         |
-| `LOG_LEVEL`             | `debug` (dev)            | winston log level                            |
-
-Secrets are **not** committed — `server/.env` is gitignored; only
-`server/.env.example` is tracked.
+If the username already exists, its password and role are updated. Usernames
+are case-insensitive.
 
 ## Scripts
 
-**Root**
+**Repository root**
 
-| Script                | Description                              |
-| --------------------- | ---------------------------------------- |
-| `npm run install:all` | Install server + client deps             |
-| `npm run server`      | Start the API in watch mode              |
-| `npm run client`      | Start the Vite dev server                |
-| `npm test`            | Run the backend test suite               |
-| `npm run lint`        | Lint server + client                     |
-| `npm run format`      | Format the codebase with Prettier        |
+| Script                | Description                            |
+| --------------------- | -------------------------------------- |
+| `npm run install:all` | Install server and client dependencies |
+| `npm run server`      | Start the API in watch mode            |
+| `npm run client`      | Start the Vite dev server              |
+| `npm test`            | Run the backend test suite             |
+| `npm run lint`        | Lint server and client                 |
+| `npm run format`      | Format the codebase with Prettier      |
 
-**Server** (`--prefix server`)
+**Server** (`npm run <script> --prefix server`)
 
-| Script               | Description                          |
-| -------------------- | ------------------------------------ |
-| `npm start`          | Start the API                        |
-| `npm run dev`        | Start the API in watch mode          |
-| `npm run seed`       | Seed sample reservations             |
-| `npm run seed:admin` | Create/update an admin account       |
-| `npm test`           | Run Jest                             |
+| Script       | Description                       |
+| ------------ | --------------------------------- |
+| `start`      | Start the API                     |
+| `dev`        | Start the API in watch mode       |
+| `seed`       | Seed sample reservations          |
+| `seed:admin` | Create or update an admin account |
+| `test`       | Run Jest                          |
 
-## Testing & linting
+## Testing and linting
 
 ```bash
-npm test          # 25 Jest tests (validators, date utils, errors, API)
-npm run lint      # ESLint (server + client)
+npm test          # Jest: validators, date utilities, errors, API
+npm run lint      # ESLint (server and client)
 npm run format    # Prettier
 ```
 
-## Deployment (Render + Vercel)
+## Deployment
 
-Three pieces: **MongoDB Atlas** (database), the **API on Render**, and the
-**client on Vercel**. Vercel proxies `/api/*` to Render (see
-[`client/vercel.json`](client/vercel.json)) so API calls **and** DB-stored
-images stay same-origin — no CORS juggling, and `<img src="/api/images/…">`
-keeps working.
+The application is deployed as three pieces: MongoDB Atlas (database), Render
+(API), and Vercel (client). Vercel proxies `/api/*` to Render through
+[client/vercel.json](client/vercel.json), so API calls and stored images stay
+same-origin.
 
-### 1. Database — MongoDB Atlas (free)
+1. **Database.** Create a free M0 cluster on
+   [MongoDB Atlas](https://www.mongodb.com/atlas), add a database user, allow
+   network access, and copy the connection string.
 
-1. Create a free M0 cluster at <https://www.mongodb.com/atlas>.
-2. Add a database user (username + password).
-3. Network Access → allow `0.0.0.0/0` (or Render's egress IPs).
-4. Copy the connection string, e.g. `mongodb+srv://user:pass@cluster.mongodb.net/robe-rent`.
+2. **API on Render.** Create a Blueprint from this repository using
+   [render.yaml](render.yaml), then set these variables in the dashboard:
 
-### 2. API — Render
+   | Variable         | Value                    |
+   | ---------------- | ------------------------ |
+   | `MONGODB_URI`    | Atlas connection string  |
+   | `CLIENT_ORIGIN`  | Vercel URL of the client |
+   | `ADMIN_USERNAME` | Initial admin username   |
+   | `ADMIN_PASSWORD` | Initial admin password   |
 
-Using the included [`render.yaml`](render.yaml): Render → **New → Blueprint** →
-select this repo, then fill the `sync: false` variables in the dashboard:
+   `JWT_SECRET` is generated automatically. The health check path is
+   `/api/health`. Free Render instances sleep after inactivity, so the first
+   request after idle time can take 30 to 50 seconds.
 
-| Variable         | Value                                                  |
-| ---------------- | ------------------------------------------------------ |
-| `MONGODB_URI`    | your Atlas connection string                           |
-| `CLIENT_ORIGIN`  | your Vercel URL (e.g. `https://robe-rent.vercel.app`)  |
-| `ADMIN_USERNAME` | initial admin username                                 |
-| `ADMIN_PASSWORD` | initial admin password                                 |
+3. **Admin account.** Create an admin in the Atlas database by running
+   `seed-admin.js` from `server/` with `MONGODB_URI` pointing to Atlas, or by
+   running `npm run seed:admin` in the Render shell.
 
-`JWT_SECRET` is auto-generated; `NODE_ENV=production` and `PORT` are handled for
-you (`server.js` reads `process.env.PORT`). Manual alternative: a Web Service
-with Root Directory `server`, build `npm install`, start `node server.js`,
-health check path `/api/health`.
+4. **Client on Vercel.** Set the destination in `client/vercel.json` to your
+   Render URL, import the repository, set the Root Directory to `client`, and
+   deploy.
 
-> Free Render services sleep after inactivity, so the first request after idle
-> can take ~30–50s (cold start).
-
-### 3. Preseed the admin account
-
-Login reads admins from MongoDB, so create one against the **Atlas** database
-(from your machine, pointing at the Atlas URI):
-
-```bash
-# macOS/Linux
-cd server
-MONGODB_URI="mongodb+srv://user:pass@cluster.mongodb.net/robe-rent" node seed-admin.js admin "YourStrongPassword"
-```
-
-```powershell
-# Windows PowerShell
-cd server
-$env:MONGODB_URI="mongodb+srv://user:pass@cluster.mongodb.net/robe-rent"; node seed-admin.js admin "YourStrongPassword"
-```
-
-(Or use Render's **Shell** tab and run `npm run seed:admin`.) Dresses are added
-afterwards from the admin dashboard — there is no dress seeder.
-
-### 4. Client — Vercel
-
-1. In [`client/vercel.json`](client/vercel.json), replace
-   `YOUR-RENDER-SERVICE.onrender.com` with your actual Render URL.
-2. Vercel → **New Project** → import this repo.
-3. Set **Root Directory** to `client` (framework auto-detects as Vite; build
-   `npm run build`, output `dist`).
-4. Deploy.
-
-### 5. Wire them together
-
-- Set Render's `CLIENT_ORIGIN` to the final Vercel URL and redeploy.
-- Open the Vercel URL → the gallery loads, `/admin/login` works with the seeded
-  admin, and reservations/images work through the `/api` proxy.
+5. **Connect them.** Set Render's `CLIENT_ORIGIN` to the final Vercel URL and
+   redeploy.
 
 ## API reference
 
-| Method | Endpoint                             | Auth  | Description                                |
-| ------ | ------------------------------------ | ----- | ------------------------------------------ |
-| GET    | `/api/health`                        | —     | Liveness check                             |
-| GET    | `/api/dresses`                       | —     | All dresses (filters: category/min/maxPrice)|
-| GET    | `/api/dresses/:id`                   | —     | Single dress                               |
-| GET    | `/api/dresses/:id/reserved-dates`    | —     | Unavailable days (incl. buffer + block-outs)|
-| POST   | `/api/reservations`                  | —     | Create a reservation (validated + checked) |
-| GET    | `/api/images/:id`                    | —     | Stream a stored image                      |
-| POST   | `/api/admin/login`                   | —     | Admin login → JWT                          |
-| GET    | `/api/admin/reservations`            | admin | All reservations                           |
-| PATCH  | `/api/admin/reservations/:id/status` | admin | Update status (records audit history)      |
-| GET    | `/api/admin/calendar`                | admin | Reservations grouped by day                |
-| GET    | `/api/admin/stats`                   | admin | Dashboard statistics                       |
-| GET    | `/api/admin/stats/history`           | admin | Monthly history                            |
-| GET    | `/api/admin/clients`                 | admin | Client history (grouped by email)          |
-| POST   | `/api/admin/dresses`                 | admin | Create a dress (multipart)                 |
-| PUT    | `/api/admin/dresses/:id`             | admin | Update a dress (multipart)                 |
-| DELETE | `/api/admin/dresses/:id`             | admin | Delete a dress + its reservations          |
+| Method | Endpoint                             | Auth  | Description                            |
+| ------ | ------------------------------------ | ----- | -------------------------------------- |
+| GET    | `/api/health`                        | -     | Liveness check                         |
+| GET    | `/api/dresses`                       | -     | List dresses (category, price filters) |
+| GET    | `/api/dresses/:id`                   | -     | Single dress                           |
+| GET    | `/api/dresses/:id/reserved-dates`    | -     | Unavailable days for a dress           |
+| POST   | `/api/reservations`                  | -     | Create a reservation                   |
+| GET    | `/api/images/:id`                    | -     | Stream a stored image                  |
+| POST   | `/api/admin/login`                   | -     | Admin login, returns a JWT             |
+| GET    | `/api/admin/reservations`            | admin | List all reservations                  |
+| PATCH  | `/api/admin/reservations/:id/status` | admin | Update status (audit trail)            |
+| GET    | `/api/admin/calendar`                | admin | Reservations grouped by day            |
+| GET    | `/api/admin/stats`                   | admin | Dashboard statistics                   |
+| GET    | `/api/admin/stats/history`           | admin | Monthly history                        |
+| GET    | `/api/admin/clients`                 | admin | Client history                         |
+| POST   | `/api/admin/dresses`                 | admin | Create a dress (multipart)             |
+| PUT    | `/api/admin/dresses/:id`             | admin | Update a dress (multipart)             |
+| DELETE | `/api/admin/dresses/:id`             | admin | Delete a dress and its reservations    |
 
-See [docs/API.md](docs/API.md) for request/response examples and error shapes.
+Request and response examples are in [docs/API.md](docs/API.md).
 
 ## How availability works
 
-Reservation dates are normalised to **midnight UTC**, so a booking is identified
-by its calendar day, not a timestamp. A dress is unavailable on a day if:
+Reservation dates are normalised to midnight UTC, so a booking is identified by
+its calendar day. A dress is unavailable on a day if:
 
-- an active (non-cancelled/returned) reservation covers it, **plus** a
-  configurable `BOOKING_BUFFER_DAYS` cleaning buffer on either side, or
-- the day is in the dress's `blockoutDates`.
+- an active (not cancelled or returned) reservation covers it, plus a
+  `BOOKING_BUFFER_DAYS` cleaning buffer on either side, or
+- the day is listed in the dress's `blockoutDates`.
 
-Availability is enforced **twice** — in the UI for instant feedback, and again
-on `POST /api/reservations` (the source of truth) which returns `409` on a
-clash to prevent double bookings even under a race.
+Availability is checked twice: in the interface for instant feedback, and again
+on `POST /api/reservations`, which is the source of truth and returns `409` on a
+conflict to prevent double bookings.
 
-## Security notes
+## Security
 
-- Admin accounts live in MongoDB with bcrypt-hashed passwords; there are no
-  hardcoded credentials in the running app.
-- `helmet` sets secure headers; `express-rate-limit` throttles the public
-  reservation and login endpoints.
-- All request bodies/params are validated with Zod before any DB access.
+- Admin passwords are bcrypt-hashed; no credentials are hardcoded.
+- `helmet` sets secure HTTP headers, and `express-rate-limit` throttles the
+  login and reservation endpoints.
+- All request bodies and parameters are validated with Zod before any database
+  access.
+- Secrets are kept in `server/.env`, which is excluded from version control.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines and
+[CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ## License
 
